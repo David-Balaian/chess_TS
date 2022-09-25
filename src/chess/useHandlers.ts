@@ -22,7 +22,6 @@ export const useHandlers = (board: Board, setBoard: (board: Board) => void, boar
     }
 
     const handleChooseFigure = (square: BoardSquare, i: number, j: number, board: Board) => {
-        console.log(square, i, j, board)
         let boardCopy = _.cloneDeep(board)
         boardCopy[i][j] = {...boardCopy[i][j], ...square};
         setBoard(boardCopy)
@@ -180,13 +179,12 @@ export const useHandlers = (board: Board, setBoard: (board: Board) => void, boar
             if(activeCell.data && activeCell.data.figureName === 'King' && activeCell.data.isFirstMove && (j === activeCell.j + 2 || j === activeCell.j - 2)){
                 boardCopy = handleCastle(boardCopy, activeCell, i, j)
             }
-
             if(
                 activeCell.data &&
                 activeCell.data.figureName === 'Pawn' && 
                 (j === activeCell.j + 1 || j === activeCell.j - 1) &&
-                (board[activeCell.i][activeCell.j-1] &&
-                board[activeCell.i][activeCell.j-1].figureName === 'Pawn' )|| (board[activeCell.i][activeCell.j+1] && board[activeCell.i][activeCell.j+1].figureName === 'Pawn')
+                ((board[activeCell.i][activeCell.j-1] && board[activeCell.i][activeCell.j-1].figureName === 'Pawn' ) || 
+                (board[activeCell.i][activeCell.j+1] && board[activeCell.i][activeCell.j+1].figureName === 'Pawn'))
             ){
                 boardCopy = handleTakeInitialPawn(boardCopy, activeCell, i, j)
             }

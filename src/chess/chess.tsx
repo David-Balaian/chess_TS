@@ -1,10 +1,8 @@
 import { Paper, Button } from '@mui/material'
-import { Box } from '@mui/system'
 import React from 'react'
 import styles from './chess.module.css'
 import { useHandlers } from './useHandlers'
 import { useInitializeBoard } from './useInitializeBoard'
-import { Board, BoardSquare } from "../utils/interfaces"
 import { useBoardHistory } from './useBoardHistory'
 
 export default function Chess() {
@@ -29,7 +27,8 @@ export default function Chess() {
             {Array.isArray(board) && board.map((row: any, i: number)=>{
                 return row.map((square: any, j: number)=>(
                     <Button key={`${i}_${j}`} onClick={()=>(handleBoxClick(square, i, j, board))} classes={{root: styles.square}}>
-                        <div className={styles.square} style={{backgroundColor: square.color, backgroundImage: `url("/chessPieces/${square.figureImg}")`}}> 
+                        <div className={styles.square} style={{backgroundColor: square.color}}> 
+                        <img width={'90%'} src={square.figureImg} />
                         {chooseFigure && chooseFigure.i === i && chooseFigure.j === j && 
                             <Paper classes={{root: styles.figures}} sx={{...style, zIndex: 100}} >
                                 {figures(chooseFigure.color).map((square: any)=>{
