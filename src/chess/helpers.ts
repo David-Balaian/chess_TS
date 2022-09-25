@@ -1,7 +1,10 @@
 import { squareColor } from '../utils/interfaces';
 import palette from '../utils/palette';
 
-export const getInitialSquareColor = (i: number, j: number): squareColor => {
+export const getInitialSquareColor = (i: number, j: number, isCheck?: {i:number, j: number}): squareColor => {
+    if(isCheck && isCheck.i===i && isCheck.j === j){
+        return palette.red;
+    }
     if(i % 2===0){
         if(j % 2 === 0) return palette.brown
         return palette.white;

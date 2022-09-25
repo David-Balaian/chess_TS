@@ -28,6 +28,7 @@ export default function Chess() {
                 return row.map((square: any, j: number)=>(
                     <Button key={`${i}_${j}`} onClick={()=>(handleBoxClick(square, i, j, board))} classes={{root: styles.square}}>
                         <div className={styles.square} style={{backgroundColor: square.color}}> 
+                        {/* <span style={{position: 'absolute', bottom: '-5px',}} >{`${i}_${j}`}</span> */}
                         <img width={'90%'} src={square.figureImg} />
                         {chooseFigure && chooseFigure.i === i && chooseFigure.j === j && 
                             <Paper classes={{root: styles.figures}} sx={{...style, zIndex: 100}} >
@@ -35,6 +36,7 @@ export default function Chess() {
                                     
                                     return <div key={`${i}_${j}_${square.figureName}`} onClick={(e)=>{e.preventDefault(); e.stopPropagation(); handleChooseFigure(square, i, j, board)}} className={styles.squareWithoutBorder}>
                                         <div className={styles.square} style={{backgroundColor: square.color}}> 
+                                        
                                         <img width={'90%'} src={square.figureImg} />
                                         </div>
                                     </div>

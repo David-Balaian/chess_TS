@@ -8,7 +8,7 @@ import _ from 'lodash'
 
 export const useHandlers = (board: Board, setBoard: (board: Board) => void, boardHistory: Board[], setBoardHistory: (board: Board[]) => void) => {
 
-    const [isCheck, setIsCheck] = useState<{color: 'white' | 'black', kingCoords: {i:number, j: number}, isCheck: boolean, checkDirection: {i:number, j: number}[]}>()
+    const [isCheck, setIsCheck] = useState<{color: 'white' | 'black', kingCoords: {i:number, j: number}, isCheck: boolean, checkDirection: {i:number, j: number}[][]}>()
     const [activeCell, setActiveCell] = useState<ActiveCell>({data: null, i: null , j: null})
     const [currentPlayer, setCurrentPlayer] = useState<'white' | 'black'>('white')
     const [checkmate, setCheckmate] = useState<'white' | 'black'>()
@@ -51,7 +51,7 @@ export const useHandlers = (board: Board, setBoard: (board: Board) => void, boar
                     setActiveCell({data:null, i:null, j:null})
                     if(nextPlayer){
                         setCurrentPlayer(nextPlayer)
-                        let checkObj = getIsCheck(newBoard, nextPlayer)
+                        let checkObj = getIsCheck(newBoard, nextPlayer);
                         setIsCheck(checkObj)
                     }
                 }
@@ -61,18 +61,17 @@ export const useHandlers = (board: Board, setBoard: (board: Board) => void, boar
             setActiveCell({data, i, j})
         }
     }
-
-    const isCheckMate = (board: Board, checkDirection: {i:number, j:number}[], player: 'white' | 'black') => {
+    const isCheckMate = (board: Board, checkDirection: {i:number, j:number}[][], player: 'white' | 'black') => {
         let kingPos = locateKing(board, player)
         let kingMoves = getFigureMoves({data: board[kingPos.i][kingPos.j], i: kingPos.i, j: kingPos.j}, board)
         for (let i = 0; i < board.length; i++) {
             for (let j = 0; j < board[i].length; j++) {
                 if(board[i][j].figureName){
                     let coords = getFigureMoves({data: board[i][j], i, j}, board)
-                    if(coords.length){
+                    if(coords.length || kingMoves.length){
                         const availableCoords: {i:number, j: number}[] = [];
     
-                        [...checkDirection, ...coords, ...kingMoves].forEach((o, i, arr) =>  {
+                        [...checkDirection.flat(), ...coords, ...kingMoves].forEach((o, i, arr) =>  {
                             let eq = arr.find((e, ind) => {
                                 if (i > ind) {
                                 return _.isEqual(e, o);
@@ -110,6 +109,7 @@ export const useHandlers = (board: Board, setBoard: (board: Board) => void, boar
         const kingCoords = kingPos || locateKing(board, currentPlayer)
         let {i, j} = kingCoords;
         let checkObj;
+        let arr:any = []
         Object.entries(directions).forEach(([key, value])=>{
             const {steps, blockers, attackWhite, attackBlack} = value
 
@@ -127,6 +127,7 @@ export const useHandlers = (board: Board, setBoard: (board: Board) => void, boar
                     }
                     if(!board[x] || !board[x][y]) continue;
                     checkDirection.push({i: x, j: y})
+                    
                     if(key === 'Queen'){
                         const indexToCompare = figureAttacingCoords[k][h - 1] ? h - 1 : h + 1
                         if(figureAttacingCoords[k][h].i === figureAttacingCoords[k][indexToCompare].i || figureAttacingCoords[k][h].j === figureAttacingCoords[k][indexToCompare].j){
@@ -140,12 +141,15 @@ export const useHandlers = (board: Board, setBoard: (board: Board) => void, boar
                         break;
                     }
                     if(board[x] && board[x][y] && board[x][y].figureName === key){
-                        checkObj = {color: currentPlayer, kingCoords, isCheck: true, checkDirection}
+                        checkObj = {color: currentPlayer, kingCoords, isCheck: true, checkDirection: arr}
                         found = true
                         break
                     }
                 }  
-                if(found) break;
+                if(found) {
+                    arr.push(checkDirection);
+                    found = false
+                }
             }
         })
             return checkObj
@@ -331,9 +335,22 @@ export const useHandlers = (board: Board, setBoard: (board: Board) => void, boar
 
                 if(isCheck && isCheck.isCheck){
                     let { checkDirection } = isCheck;
-                    let blockingCoords: {i: number, j: number}[] = [];
-                    
-                    [...checkDirection, ...coords].forEach((o, i, arr) =>  {
+                    let possibleBlockingCoords: {i: number, j: number}[] = checkDirection[0];
+                    if(checkDirection.length > 1){
+                        possibleBlockingCoords = [];
+                        checkDirection.flat().forEach((o, i, arr) =>  {
+                            let eq = arr.find((e, ind) => {
+                              if (i > ind) {
+                                return _.isEqual(e, o);
+                              }
+                            })
+                            if (eq) {
+                                possibleBlockingCoords.push(o)
+                            } 
+                          });
+                    }
+                      let blockingCoords: {i: number, j: number}[] = [];
+                    [...possibleBlockingCoords, ...coords].forEach((o, i, arr) =>  {
                         let eq = arr.find((e, ind) => {
                           if (i > ind) {
                             return _.isEqual(e, o);
@@ -349,32 +366,49 @@ export const useHandlers = (board: Board, setBoard: (board: Board) => void, boar
                 if(activeCell.data.figureColor && activeCell.i && activeCell.j){
                     const check: any = getIsCheck(board, activeCell.data.figureColor, {i: activeCell.i, j: activeCell.j})
                     if(check){
-                        let boardItem = board[check.checkDirection[0].i][check.checkDirection[0].j]
-                        let deltaI = activeCell.i - check.checkDirection[0].i
-                        let deltaJ = activeCell.j - check.checkDirection[0].j
+                        let addToDirection = []
+                        let boardItem
+                        let directionIndex = 0
+                            for(let z=0; z<check.checkDirection.length; z++){
+                                directionIndex = z
+                            boardItem = board[check.checkDirection[z][0].i][check.checkDirection[z][0].j]
+                            let deltaI = activeCell.i - check.checkDirection[z][0].i
+                            let deltaJ = activeCell.j - check.checkDirection[z][0].j
                             let k = 1;
                             while (boardItem && `${boardItem.figureColor}${boardItem.figureName}` !== `${activeCell.data.figureColor}King`) {
-                                boardItem = board[check.checkDirection[0].i + (deltaI * k)] && board[check.checkDirection[0].i+(deltaI * k)][check.checkDirection[0].j + (deltaJ * k)]
+                                let i = check.checkDirection[z][0].i + (deltaI * k);
+                                let j = check.checkDirection[z][0].j + (deltaJ * k)
+                                boardItem = board[i] && board[i][j]
                                 k++;
-                                if(boardItem && boardItem.figureColor && `${boardItem.figureColor}${boardItem.figureName}` !== `${activeCell.data.figureColor}${activeCell.data.figureName}`){
-                                    break;
+                                addToDirection.push({i,j})
+                                if(!boardItem) {
+                                    addToDirection = []
+                                    break
                                 }
+                                if(boardItem && boardItem.figureColor && `${boardItem.figureColor}${boardItem.figureName}` !== `${activeCell.data.figureColor}${activeCell.data.figureName}`){
+                                    // addToDirection.pop()
+                                    break
+                                }
+                                if(boardItem.figureName === 'King') break
                             }
+                            if(boardItem && boardItem.figureName === 'King') break
+                        }
                         if(boardItem && boardItem.figureName === 'King'){
+                            addToDirection.pop()
                             const availableCoords: {i:number, j: number}[] = [];
-    
-                            [...check.checkDirection, ...coords].forEach((o, i, arr) =>  {
+                            [...check.checkDirection[directionIndex], ...coords, ...addToDirection].forEach((o, i, arr) =>  {
                                 let eq = arr.find((e, ind) => {
-                                  if (i > ind) {
+                                    if (i > ind) {
                                     return _.isEqual(e, o);
-                                  }
+                                    }
                                 })
                                 if (eq) {
                                     availableCoords.push(o)
                                 } 
-                              })
+                                })
                             return availableCoords
                         }
+                        
                     }
                 }
         return coords
@@ -386,6 +420,7 @@ export const useHandlers = (board: Board, setBoard: (board: Board) => void, boar
             boardCopy[i][j].color = color
             return boardCopy;
     }
+
 
     const getCastleMoves = (board: Board, kingColor: 'white' | 'black', kingI: number, kingJ: number): {i:number, j: number}[] => {
         const steps = [
@@ -416,7 +451,8 @@ export const useHandlers = (board: Board, setBoard: (board: Board) => void, boar
     useEffect(()=>{
         let newBoard = board;
         if(prevActiveCell && typeof(prevActiveCell.i) === 'number' && typeof(prevActiveCell.j) === 'number'){
-            newBoard = highlightCell(prevActiveCell.i, prevActiveCell.j, getInitialSquareColor(prevActiveCell.i, prevActiveCell.j), newBoard)
+            const kingCoords = isCheck && isCheck.kingCoords
+            newBoard = highlightCell(prevActiveCell.i, prevActiveCell.j, getInitialSquareColor(prevActiveCell.i, prevActiveCell.j, kingCoords), newBoard)
             if(prevActiveCell.data && prevActiveCell.data.figureName){
                 let steps = getFigureMoves(prevActiveCell, newBoard)
                 steps.forEach((item: any)=>{
