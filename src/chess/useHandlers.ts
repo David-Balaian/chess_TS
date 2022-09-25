@@ -183,7 +183,9 @@ export const useHandlers = (board: Board, setBoard: (board: Board) => void, boar
                 activeCell.data &&
                 activeCell.data.figureName === 'Pawn' && 
                 (j === activeCell.j + 1 || j === activeCell.j - 1) &&
-                ((board[activeCell.i][activeCell.j-1] && board[activeCell.i][activeCell.j-1].figureName === 'Pawn' ) || 
+                (!board[i][j].figureName) &&
+                board[activeCell.i][activeCell.j-1] && board[activeCell.i][activeCell.j-1].figureColor !== activeCell.data.figureColor &&
+                ((board[activeCell.i][activeCell.j-1] && board[activeCell.i][activeCell.j-1].figureName === 'Pawn') || 
                 (board[activeCell.i][activeCell.j+1] && board[activeCell.i][activeCell.j+1].figureName === 'Pawn'))
             ){
                 boardCopy = handleTakeInitialPawn(boardCopy, activeCell, i, j)

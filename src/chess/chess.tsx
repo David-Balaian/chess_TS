@@ -4,7 +4,7 @@ import styles from './chess.module.css'
 import { useHandlers } from './useHandlers'
 import { useInitializeBoard } from './useInitializeBoard'
 import { useBoardHistory } from './useBoardHistory'
-
+import figuresImg from './images'
 export default function Chess() {
 
     const [board, setBoard] = useInitializeBoard()
@@ -14,10 +14,10 @@ export default function Chess() {
     const {handleBoxClick, checkmate, chooseFigure, handleChooseFigure} = useHandlers(board, setBoard, boardHistory, setBoardHistory)
 
     const figures = (figureColor: 'white' | 'black') => ([
-        {figureImg: `Rook_${figureColor}.png`, figureName: 'Rook', figureColor},
-        {figureImg: `Horse_${figureColor}.png`, figureName: 'Horse', figureColor},
-        {figureImg: `Bishop_${figureColor}.png`, figureName: 'Bishop', figureColor},
-        {figureImg: `Queen_${figureColor}.png`, figureName: 'Queen', figureColor}
+        {figureImg: figuresImg[`${figureColor}Rook`], figureName: 'Rook', figureColor},
+        {figureImg: figuresImg[`${figureColor}Horse`], figureName: 'Horse', figureColor},
+        {figureImg: figuresImg[`${figureColor}Bishop`], figureName: 'Bishop', figureColor},
+        {figureImg: figuresImg[`${figureColor}Queen`], figureName: 'Queen', figureColor}
     ])
     const style = chooseFigure && chooseFigure.color === 'white' ? { top: 0 } : { bottom: 0 };
   return (
@@ -34,7 +34,8 @@ export default function Chess() {
                                 {figures(chooseFigure.color).map((square: any)=>{
                                     
                                     return <div key={`${i}_${j}_${square.figureName}`} onClick={(e)=>{e.preventDefault(); e.stopPropagation(); handleChooseFigure(square, i, j, board)}} className={styles.squareWithoutBorder}>
-                                        <div className={styles.square} style={{backgroundColor: square.color, backgroundImage: `url("/chessPieces/${square.figureImg}")`, }}> 
+                                        <div className={styles.square} style={{backgroundColor: square.color}}> 
+                                        <img width={'90%'} src={square.figureImg} />
                                         </div>
                                     </div>
                                 })}
